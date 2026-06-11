@@ -30,7 +30,7 @@ export function resetRateLimit(key: string): void {
 if (typeof setInterval !== "undefined") {
   setInterval(() => {
     const now = Date.now();
-    for (const [key, entry] of attempts.entries()) {
+    for (const [key, entry] of Array.from(attempts.entries())) {
       if (now > entry.resetAt) attempts.delete(key);
     }
   }, WINDOW_MS);
