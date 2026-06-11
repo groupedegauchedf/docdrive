@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { LoginForm } from "@/components/auth/login-form";
 import { FileText } from "lucide-react";
 
@@ -17,7 +18,9 @@ export default function LoginPage() {
         {/* Formulaire */}
         <div className="rounded-xl border bg-white p-8 shadow-sm">
           <h2 className="mb-6 text-xl font-semibold text-gray-900">Connexion</h2>
-          <LoginForm />
+          <Suspense fallback={null}>
+            <LoginForm />
+          </Suspense>
         </div>
 
         <p className="mt-6 text-center text-xs text-gray-400">
