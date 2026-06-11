@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum AuditAction {
+  LOGIN
+  LOGOUT
+  LOGIN_FAILED
+  DOCUMENT_UPLOAD
+  DOCUMENT_DOWNLOAD
+  DOCUMENT_DELETE
+  DOCUMENT_VIEW
+  FOLDER_CREATE
+  FOLDER_DELETE
+  USER_CREATE
+  USER_UPDATE
+  USER_DELETE
+  PASSWORD_RESET
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         Role      @default(USER)
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  lastLoginAt  DateTime?
+
+  documents Document[]
+  folders   Folder[]
+  auditLogs AuditLog[]
+
+  @@map("users")
+}
+
+model Folder {
+  id        String   @id @default(uuid())
+  name      String
+  parentId  String?
+  createdAt DateTime @default(now())
+
+  parent    Folder?    @relation("FolderChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Folder[]   @relation("FolderChildren")
+  createdBy User       @relation(fields: [createdById], references: [id])
+  createdById String
+  documents Document[]
+
+  @@map("folders")
+}
+
+model Document {
+  id           String   @id @default(uuid())
+  name         String
+  storageKey   String   @unique
+  size         Int
+  mimeType     String   @default("application/pdf")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  folderId     String?
+  folder       Folder?  @relation(fields: [folderId], references: [id])
+
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
+
+  @@map("documents")
+}
+
+model AuditLog {
+  id           String      @id @default(uuid())
+  action       AuditAction
+  resourceType String?
+  resourceId   String?
+  metadata     Json?
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime    @default(now())
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
